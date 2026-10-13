@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary"><i class="fas fa-dumbbell"></i> GYM Analytics Dashboard</h1>
+        <p class="lead text-muted">Intelligence Artificielle pour l'optimisation de votre salle de sport</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- BO1: Churn Prediction -->
+        <div class="col-md-4">
+            <div class="card h-100 border-primary shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h3 class="h4 mb-0">Réduction du Churn</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Prédiction d'Abandon</h5>
+                    <p class="card-text flex-grow-1">
+                        Identifiez les clients à risque de résiliation pour anticiper et mettre en place des actions de
+                        fidélisation.
+                    </p>
+                    <div class="mt-3">
+                        <span class="badge bg-info">Logistic Regression</span>
+                        <span class="badge bg-info">Random Forest</span>
+                        <span class="badge bg-info">XGBoost</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'predict_churn' %}" class="btn btn-primary w-100">
+                        <i class="fas fa-play-circle"></i> Lancer l'analyse
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- BO2: Customer Segmentation -->
+        <div class="col-md-4">
+            <div class="card h-100 border-success shadow-lg">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="h4 mb-0">Segmentation Clients</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Profils d'Utilisateurs</h5>
+                    <p class="card-text flex-grow-1">
+                        Découvrez les différents profils de vos clients pour personnaliser vos offres et services.
+                    </p>
+                    <div class="mt-3">
+                        <span class="badge bg-info">K-Means</span>
+                        <span class="badge bg-info">DBSCAN</span>
+                        <span class="badge bg-info">Hierarchical</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'predict_clustering' %}" class="btn btn-success w-100">
+                        <i class="fas fa-chart-pie"></i> Segmenter les clients
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- BO3: Satisfaction Prediction -->
+        <div class="col-md-4">
+            <div class="card h-100 border-warning shadow-lg">
+                <div class="card-header bg-warning text-white text-center py-3">
+                    <i class="fas fa-smile fa-2x mb-2"></i>
+                    <h3 class="h4 mb-0">Satisfaction Client</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Niveau de Satisfaction</h5>
+                    <p class="card-text flex-grow-1">
+                        Prédisez la satisfaction de vos clients et recevez des recommandations personnalisées pour
+                        l'améliorer.
+                    </p>
+                    <div class="mt-3">
+                        <span class="badge bg-info">XGBoost</span>
+                        <span class="badge bg-info">SVM</span>
+                        <span class="badge bg-info">Decision Tree</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'predict_satisfaction' %}" class="btn btn-warning w-100">
+                        <i class="fas fa-star"></i> Évaluer la satisfaction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="fas fa-chart-bar"></i> Aperçu des Capacités</h4>
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h2 class="text-primary">3</h2>
+                            <p class="text-muted">Modèles IA</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-success">95%</h2>
+                            <p class="text-muted">Précision moyenne</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-warning">4</h2>
+                            <p class="text-muted">Segments clients</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h2 class="text-info">3</h2>
+                            <p class="text-muted">Niveaux de satisfaction</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

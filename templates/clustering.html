@@ -1,0 +1,726 @@
+{% extends 'base.html' %}
+
+{% block title %}Segmentation Clients - Gym Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cluster-card {
+        border-left: 5px solid;
+        margin-bottom: 20px;
+        transition: transform 0.3s;
+    }
+
+    .cluster-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .cluster-0 {
+        border-color: #2C3E50;
+        background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+        color: white;
+    }
+
+    .cluster-1 {
+        border-color: #DC3545;
+        background: linear-gradient(135deg, #DC3545 0%, #C82333 100%);
+        color: white;
+    }
+
+    .cluster-2 {
+        border-color: #FF6B35;
+        background: linear-gradient(135deg, #FF6B35 0%, #E65A2B 100%);
+        color: white;
+    }
+
+    .cluster-3 {
+        border-color: #6C757D;
+        background: linear-gradient(135deg, #6C757D 0%, #5A6268 100%);
+        color: white;
+    }
+
+    .cluster-badge {
+        font-size: 1.5em;
+        padding: 5px 20px;
+        border-radius: 25px;
+        color: white;
+        font-weight: bold;
+    }
+
+    .viz-img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 10px 0;
+        transition: transform 0.3s;
+    }
+
+    .viz-img:hover {
+        transform: scale(1.02);
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .factor-bar {
+        height: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        margin: 5px 0;
+        overflow: hidden;
+    }
+
+    .factor-fill {
+        height: 100%;
+        border-radius: 5px;
+    }
+
+    .cluster-icon {
+        font-size: 2em;
+        margin-right: 10px;
+    }
+
+    .service-badge {
+        margin: 2px;
+        font-size: 0.8em;
+    }
+
+    .cluster-bar-0 {
+        width: 0%;
+    }
+
+    .cluster-bar-10 {
+        width: 10%;
+    }
+
+    .cluster-bar-20 {
+        width: 20%;
+    }
+
+    .cluster-bar-30 {
+        width: 30%;
+    }
+
+    .cluster-bar-40 {
+        width: 40%;
+    }
+
+    .cluster-bar-50 {
+        width: 50%;
+    }
+
+    .cluster-bar-60 {
+        width: 60%;
+    }
+
+    .cluster-bar-70 {
+        width: 70%;
+    }
+
+    .cluster-bar-80 {
+        width: 80%;
+    }
+
+    .cluster-bar-90 {
+        width: 90%;
+    }
+
+    .cluster-bar-100 {
+        width: 100%;
+    }
+
+    .cluster-visits-0 {
+        width: 0%;
+    }
+
+    .cluster-visits-1 {
+        width: 14%;
+    }
+
+    .cluster-visits-2 {
+        width: 28%;
+    }
+
+    .cluster-visits-3 {
+        width: 42%;
+    }
+
+    .cluster-visits-4 {
+        width: 56%;
+    }
+
+    .cluster-visits-5 {
+        width: 70%;
+    }
+
+    .cluster-visits-6 {
+        width: 84%;
+    }
+
+    .cluster-visits-7 {
+        width: 100%;
+    }
+
+    .time-bar-30 {
+        width: 25%;
+    }
+
+    .time-bar-40 {
+        width: 33%;
+    }
+
+    .time-bar-50 {
+        width: 42%;
+    }
+
+    .time-bar-60 {
+        width: 50%;
+    }
+
+    .time-bar-70 {
+        width: 58%;
+    }
+
+    .time-bar-80 {
+        width: 67%;
+    }
+
+    .time-bar-90 {
+        width: 75%;
+    }
+
+    .time-bar-100 {
+        width: 83%;
+    }
+
+    .time-bar-110 {
+        width: 92%;
+    }
+
+    .time-bar-120 {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6">
+                        <i class="fas fa-users text-primary"></i> Segmentation Clients - K-Means Clustering
+                    </h1>
+                    <p class="lead">Découvrez les différents profils de clients et personnalisez votre marketing</p>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-success fs-6 p-3">
+                        <i class="fas fa-robot me-2"></i>
+                        {{ optimal_k }} Clusters Identifiés
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Erreur :</strong> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Visualisations -->
+    {% if visualizations %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulaire de prédiction -->
+    <div class="row">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Nouveau Client
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-venus-mars me-1"></i> Genre
+                                    </label>
+                                    <select class="form-select" name="gender" required>
+                                        <option value="1">Homme</option>
+                                        <option value="0">Femme</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-birthday-cake me-1"></i> Âge
+                                    </label>
+                                    <input type="number" class="form-control" name="Age" min="18" max="80" value="35"
+                                        required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-crown me-1"></i> Abonnement
+                                    </label>
+                                    <select class="form-select" name="abonoment_type" required>
+                                        <option value="1">Premium</option>
+                                        <option value="0">Standard</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-calendar-check me-1"></i> Visites/semaine
+                                    </label>
+                                    <input type="number" class="form-control" name="visit_per_week" min="1" max="7"
+                                        value="3" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-calendar-day me-1"></i> Jours/semaine
+                                    </label>
+                                    <input type="number" class="form-control" name="days_per_week" min="1" max="7"
+                                        value="3" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-clock me-1"></i> Temps (min)
+                                    </label>
+                                    <input type="number" class="form-control" name="avg_time_in_gym" min="10" max="180"
+                                        value="60" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Services -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-concierge-bell me-1"></i> Services
+                            </label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="attend_group_lesson"
+                                            value="1" id="groupLesson" checked>
+                                        <label class="form-check-label" for="groupLesson">
+                                            Cours collectifs
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="personal_training"
+                                            value="1" id="personalTraining">
+                                        <label class="form-check-label" for="personalTraining">
+                                            Coach personnel
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="drink_abo" value="1"
+                                            id="drinkAbo" checked>
+                                        <label class="form-check-label" for="drinkAbo">
+                                            Boissons
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="uses_sauna" value="1"
+                                            id="sauna">
+                                        <label class="form-check-label" for="sauna">
+                                            Sauna
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-search me-2"></i>Trouver le Cluster
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Information K-Means -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>À propos de K-Means
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>K-Means Clustering</strong> est un algorithme non supervisé qui
+                        regroupe les clients en fonction de leurs similarités.
+                    </p>
+                    <ul class="small">
+                        <li>Identifie naturellement les segments de clients</li>
+                        <li>Basé sur les caractéristiques comportementales</li>
+                        <li>Permet un marketing personnalisé</li>
+                        <li>Optimise l'allocation des ressources</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résultats et Analyse -->
+        <div class="col-lg-7">
+            {% if prediction_made %}
+            <!-- Résultat de la prédiction -->
+            <div class="cluster-card cluster-{{ cluster }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="cluster-badge 
+                                {% if cluster == 0 %}bg-dark
+                                {% elif cluster == 1 %}bg-primary
+                                {% elif cluster == 2 %}bg-success
+                                {% else %}bg-warning text-dark{% endif %}">
+                                Cluster {{ cluster }}
+                            </div>
+                            <h3 class="ms-3 mb-0">{{ cluster_description }}</h3>
+                        </div>
+                        <span class="badge bg-light text-dark fs-6">
+                            {{ cluster_stats.percentage|floatformat:1 }}% des clients
+                        </span>
+                    </div>
+
+                    <!-- Caractéristiques du client -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5>
+                                <i class="fas fa-user-circle me-2"></i>Profil du Client
+                            </h5>
+                            <div class="row">
+                                {% for key, value in input_data.items %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="stat-card">
+                                        <small class="text-muted">{{ key }}</small>
+                                        <div class="fw-bold">{{ value }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques du cluster -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5>
+                                <i class="fas fa-chart-bar me-2"></i>Statistiques du Cluster
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="display-6">{{ cluster_stats.count }}</div>
+                                        <small class="text-muted">Clients</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="display-6">{{ cluster_stats.avg_visits|floatformat:1 }}</div>
+                                        <small class="text-muted">Visites/sem</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="display-6">{{ cluster_stats.avg_time|floatformat:0 }}</div>
+                                        <small class="text-muted">Minutes</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="display-6">{{ cluster_stats.premium_rate|floatformat:0 }}%</div>
+                                        <small class="text-muted">Premium</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommandations -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>
+                                <i class="fas fa-bullseye me-2"></i>Recommandations Marketing
+                            </h5>
+                            <div class="list-group">
+                                {% for rec in recommendations %}
+                                <div class="list-group-item">
+                                    <i class="fas fa-arrow-circle-right me-2 text-primary"></i>
+                                    {{ rec }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Analyse globale des clusters -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Analyse des {{ optimal_k }} Clusters
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Notre base de {{ total_clients }} clients est segmentée en {{ optimal_k }} groupes
+                        distincts.</p>
+
+                    {% if clusters_info %}
+                    <div class="row">
+                        {% for cluster_id, stats in clusters_info.items %}
+                        <div class="col-md-6 mb-4">
+                            <div class="cluster-card cluster-{{ cluster_id }}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-users cluster-icon"></i>
+                                            Cluster {{ cluster_id }}
+                                        </h5>
+                                        <span class="badge bg-dark">
+                                            {{ stats.percentage|floatformat:1 }}%
+                                        </span>
+                                    </div>
+
+                                    <h6 class="text-muted mb-3">
+                                        {{ cluster_descriptions.cluster_id }}
+                                    </h6>
+
+                                    <div class="small">
+                                        <div class="mb-1">
+                                            <span>Visites/sem:</span>
+                                            <span class="float-end">{{ stats.avg_visits|floatformat:1 }}</span>
+                                            <div class="progress mt-1" style="height: 6px;">
+                                                {% if cluster_id == 0 %}
+                                                <div
+                                                    class="progress-bar bg-dark cluster-visits-{{ stats.avg_visits|floatformat:0 }}">
+                                                </div>
+                                                {% elif cluster_id == 1 %}
+                                                <div
+                                                    class="progress-bar bg-primary cluster-visits-{{ stats.avg_visits|floatformat:0 }}">
+                                                </div>
+                                                {% elif cluster_id == 2 %}
+                                                <div
+                                                    class="progress-bar bg-success cluster-visits-{{ stats.avg_visits|floatformat:0 }}">
+                                                </div>
+                                                {% else %}
+                                                <div
+                                                    class="progress-bar bg-warning cluster-visits-{{ stats.avg_visits|floatformat:0 }}">
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>Temps moyen:</span>
+                                                <span>
+                                                    <span class="badge 
+                {% if stats.avg_time >= 90 %}bg-success
+                {% elif stats.avg_time >= 60 %}bg-primary
+                {% else %}bg-secondary{% endif %}">
+                                                        {{ stats.avg_time|floatformat:0 }} min
+                                                    </span>
+                                                </span>
+                                            </div>
+
+                                            <!-- Indicateur visuel simple -->
+                                            <div class="mt-1">
+                                                <div class="d-flex align-items-center">
+                                                    <small class="text-muted me-2">Court</small>
+                                                    <div class="flex-grow-1">
+                                                        <div class="progress" style="height: 6px;">
+                                                            {% if cluster_id == 0 %}
+                                                            <div
+                                                                class="progress-bar bg-dark time-bar-{{ stats.avg_time|floatformat:0 }}">
+                                                            </div>
+                                                            {% elif cluster_id == 1 %}
+                                                            <div
+                                                                class="progress-bar bg-primary time-bar-{{ stats.avg_time|floatformat:0 }}">
+                                                            </div>
+                                                            {% elif cluster_id == 2 %}
+                                                            <div
+                                                                class="progress-bar bg-success time-bar-{{ stats.avg_time|floatformat:0 }}">
+                                                            </div>
+                                                            {% else %}
+                                                            <div
+                                                                class="progress-bar bg-warning time-bar-{{ stats.avg_time|floatformat:0 }}">
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <small class="text-muted ms-2">Long</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="progress mt-1" style="height: 8px;">
+                                            {% if cluster_id == 0 %}
+                                            <div
+                                                class="progress-bar bg-dark cluster-bar-{{ stats.premium_rate|floatformat:0 }}">
+                                            </div>
+                                            {% elif cluster_id == 1 %}
+                                            <div
+                                                class="progress-bar bg-primary cluster-bar-{{ stats.premium_rate|floatformat:0 }}">
+                                            </div>
+                                            {% elif cluster_id == 2 %}
+                                            <div
+                                                class="progress-bar bg-success cluster-bar-{{ stats.premium_rate|floatformat:0 }}">
+                                            </div>
+                                            {% else %}
+                                            <div
+                                                class="progress-bar bg-warning cluster-bar-{{ stats.premium_rate|floatformat:0 }}">
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-user-friends me-1"></i>
+                                                {{ stats.count }} clients
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Insight :</strong> Remplissez le formulaire pour découvrir dans quel cluster
+                        se situe un nouveau client et obtenir des recommandations personnalisées.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Applications pratiques -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-rocket me-2"></i>Applications Pratiques
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <i class="fas fa-bullhorn fa-2x text-primary mb-3"></i>
+                                <h6>Marketing Personnalisé</h6>
+                                <small class="text-muted">Campagnes adaptées à chaque segment</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <i class="fas fa-gift fa-2x text-success mb-3"></i>
+                                <h6>Offres Ciblées</h6>
+                                <small class="text-muted">Promotions spécifiques par cluster</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <i class="fas fa-chart-line fa-2x text-info mb-3"></i>
+                                <h6>Prédiction de Churn</h6>
+                                <small class="text-muted">Identifier les clients à risque</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3">
+                                <i class="fas fa-heart fa-2x text-danger mb-3"></i>
+                                <h6>Fidélisation</h6>
+                                <small class="text-muted">Stratégies de rétention adaptées</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animation des barres de progression
+    document.addEventListener('DOMContentLoaded', function () {
+        const factorBars = document.querySelectorAll('.factor-bar .factor-fill');
+        factorBars.forEach(bar => {
+            const computedStyle = window.getComputedStyle(bar);
+            const currentWidth = computedStyle.getPropertyValue('width');
+            bar.style.width = '0%';
+
+            setTimeout(() => {
+                const targetWidth = bar.getAttribute('style').match(/width:\s*([\d.]+)%/)[1];
+                bar.style.width = targetWidth + '%';
+            }, 500);
+        });
+    });
+
+    // Mise à jour des statistiques en temps réel
+    const formInputs = document.querySelectorAll('form input, form select');
+    formInputs.forEach(input => {
+        input.addEventListener('change', function () {
+            // Calculer un score prévisionnel
+            let score = 0;
+
+            // Score basé sur les visites
+            const visits = parseInt(document.querySelector('input[name="visit_per_week"]').value) || 3;
+            if (visits >= 5) score += 3;
+            else if (visits >= 3) score += 2;
+            else score += 1;
+
+            // Score basé sur l'abonnement
+            const abonnement = parseInt(document.querySelector('select[name="abonoment_type"]').value) || 1;
+            if (abonnement === 1) score += 2;
+
+            // Mettre à jour un indicateur visuel
+            const indicator = document.querySelector('.cluster-indicator');
+            if (indicator) {
+                let clusterPred = 'Inconnu';
+                if (score >= 5) clusterPred = 'Cluster 2 (Passionnés)';
+                else if (score >= 3) clusterPred = 'Cluster 1 (Réguliers)';
+                else clusterPred = 'Cluster 0 (Occasionnels)';
+
+                indicator.textContent = `Prédiction: ${clusterPred}`;
+            }
+        });
+    });
+</script>
+{% endblock %}

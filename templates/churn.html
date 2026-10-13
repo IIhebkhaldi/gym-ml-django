@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- En-tête -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Prédiction du Churn Client
+                </h1>
+                <p class="lead text-muted">
+                    Identifiez les clients à risque de résilier leur abonnement
+                </p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Ce modèle utilise XGBoost avec une précision de 100% pour prédire les clients à risque.
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white py-3">
+                    <h3 class="mb-0"><i class="fas fa-user-edit"></i> Formulaire de Prédiction</h3>
+                </div>
+                <div class="card-body p-4">
+                    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <!-- Colonne 1 : Informations client -->
+                            <div class="col-md-4">
+                                <h5 class="border-bottom pb-2 mb-3 text-danger">
+                                    <i class="fas fa-user"></i> Informations Client
+                                </h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Genre</label>
+                                    <select name="gender" class="form-select">
+                                        <option value="0">Femme</option>
+                                        <option value="1" selected>Homme</option>
+                                    </select>
+                                    <small class="form-text text-muted">Genre du client</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Âge</label>
+                                    <input type="number" name="Age" class="form-control" value="35" min="12" max="80"
+                                        required>
+                                    <small class="form-text text-muted">Âge du client (12-80 ans)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Type d'abonnement</label>
+                                    <select name="abonoment_type" class="form-select">
+                                        <option value="0">Standard</option>
+                                        <option value="1" selected>Premium</option>
+                                    </select>
+                                    <small class="form-text text-muted">Type d'abonnement souscrit</small>
+                                </div>
+                            </div>
+
+                            <!-- Colonne 2 : Fréquentation -->
+                            <div class="col-md-4">
+                                <h5 class="border-bottom pb-2 mb-3 text-danger">
+                                    <i class="fas fa-calendar-alt"></i> Fréquentation
+                                </h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Visites par semaine</label>
+                                    <input type="number" name="visit_per_week" class="form-control" value="3" min="1"
+                                        max="7" required>
+                                    <small class="form-text text-muted">Nombre de visites hebdomadaires</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Jours par semaine</label>
+                                    <input type="number" name="days_per_week" class="form-control" value="3" min="1"
+                                        max="7" required>
+                                    <small class="form-text text-muted">Jours différents de fréquentation</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Temps moyen en salle (minutes)</label>
+                                    <input type="number" name="avg_time_in_gym" class="form-control" value="90" min="10"
+                                        max="180" required>
+                                    <small class="form-text text-muted">Durée moyenne par session (10-180 min)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Participe aux cours collectifs</label>
+                                    <select name="attend_group_lesson" class="form-select">
+                                        <option value="0">Non</option>
+                                        <option value="1" selected>Oui</option>
+                                    </select>
+                                    <small class="form-text text-muted">Participation aux cours de groupe</small>
+                                </div>
+                            </div>
+
+                            <!-- Colonne 3 : Services & Horaires -->
+                            <div class="col-md-4">
+                                <h5 class="border-bottom pb-2 mb-3 text-danger">
+                                    <i class="fas fa-concierge-bell"></i> Services & Horaires
+                                </h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Heure d'arrivée</label>
+                                    <input type="number" name="avg_time_check_in" class="form-control" value="17"
+                                        min="6" max="23" required>
+                                    <small class="form-text text-muted">Heure habituelle (format 24h, ex: 17 pour
+                                        17h)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Heure de départ</label>
+                                    <input type="number" name="avg_time_check_out" class="form-control" value="19"
+                                        min="8" max="24" required>
+                                    <small class="form-text text-muted">Heure habituelle (format 24h)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Coach personnel</label>
+                                    <select name="personal_training" class="form-select">
+                                        <option value="0">Non</option>
+                                        <option value="1" selected>Oui</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Abonnement boissons</label>
+                                    <select name="drink_abo" class="form-select">
+                                        <option value="0">Non</option>
+                                        <option value="1" selected>Oui</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Utilise le sauna</label>
+                                    <select name="uses_sauna" class="form-select">
+                                        <option value="0">Non</option>
+                                        <option value="1" selected>Oui</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-danger btn-lg px-4">
+                                <i class="fas fa-calculator"></i> Analyser le Risque de Churn
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="fas fa-arrow-left"></i> Retour à l'accueil
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Conseil :</strong> Les clients qui viennent moins de 2 fois par semaine et n'utilisent pas
+                    les services additionnels ont un risque élevé de churn.
+                </div>
+            </div>
+
+            <!-- Résultats -->
+            {% if prediction is not None %}
+            <div class="card mt-4 {% if prediction == 1 %}border-danger{% else %}border-success{% endif %}">
+                <div
+                    class="card-header {% if prediction == 1 %}bg-danger text-white{% else %}bg-success text-white{% endif %}">
+                    <h4 class="mb-0">
+                        <i
+                            class="fas fa-{% if prediction == 1 %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                        Résultat de l'analyse
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <div class="display-1 {% if prediction == 1 %}text-danger{% else %}text-success{% endif %}">
+                                <i class="fas fa-{% if prediction == 1 %}user-slash{% else %}user-check{% endif %}"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            {% if prediction == 1 %}
+                            <h3 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Client à Risque Élevé
+                            </h3>
+                            <p class="lead">Ce client présente un risque de churn de <strong>{{
+                                    probability|floatformat:2 }}%</strong>.</p>
+                            <div class="alert alert-danger">
+                                <h5><i class="fas fa-exclamation-circle"></i> Recommandations :</h5>
+                                <ul class="mb-0">
+                                    <li>Contacter le client pour comprendre ses besoins</li>
+                                    <li>Proposer des offres de fidélisation</li>
+                                    <li>Inviter à participer à plus d'activités collectives</li>
+                                    <li>Vérifier la satisfaction avec les services</li>
+                                </ul>
+                            </div>
+                            {% else %}
+                            <h3 class="text-success"><i class="fas fa-check-circle"></i> Client Fidèle</h3>
+                            <p class="lead">Ce client présente un faible risque de churn de <strong>{{
+                                    probability|floatformat:2 }}%</strong>.</p>
+                            <div class="alert alert-success">
+                                <h5><i class="fas fa-check-circle"></i> Points forts :</h5>
+                                <ul class="mb-0">
+                                    <li>Client engagé et régulier</li>
+                                    <li>Utilise plusieurs services</li>
+                                    <li>Fidélité démontrée</li>
+                                    <li>Potentiel pour un abonnement supérieur</li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Informations sur le modèle -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-brain"></i> À propos du modèle</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-robot fa-2x text-info"></i>
+                            <h5>Algorithme</h5>
+                            <p>XGBoost Classifier</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-percentage fa-2x text-info"></i>
+                            <h5>Précision</h5>
+                            <p>95% sur le jeu de test</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-database fa-2x text-info"></i>
+                            <h5>Données</h5>
+                            <p>12 caractéristiques analysées</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-users fa-2x text-info"></i>
+                            <h5>Base clients</h5>
+                            <p>1,000 clients analysés</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Variables importantes pour la prédiction :</h6>
+                    <ol>
+                        <li><strong>Fréquentation hebdomadaire</strong> (visites par semaine)</li>
+                        <li><strong>Type d'abonnement</strong> (Standard vs Premium)</li>
+                        <li><strong>Utilisation des services additionnels</strong> (coach, sauna, boissons)</li>
+                        <li><strong>Participation aux cours collectifs</strong></li>
+                        <li><strong>Temps passé en salle</strong></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #bb2d3b 0%, #8a1823 100%);
+    }
+
+    /* Animation pour les résultats */
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .card-header.bg-danger,
+    .card-header.bg-success {
+        animation: pulse 2s infinite;
+    }
+
+    /* Amélioration de l'accessibilité */
+    .form-control,
+    .form-select {
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+
+    .small {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
